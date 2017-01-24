@@ -1,0 +1,138 @@
+// Release to Maven Central:
+buildscript {
+  repositories {
+    mavenCentral()
+  }
+  dependencies {
+    classpath 'io.codearte.gradle.nexus:gradle-nexus-staging-plugin:0.5.3'
+  }
+}
+
+plugins {
+  id 'java'
+  id 'eclipse'
+  id 'idea'
+  // Code coverage:
+  id 'jacoco'
+  id 'com.github.kt3k.coveralls' version '2.7.1'
+  // Release to OSSRH:
+  id 'maven'
+  id 'signing'
+}
+
+// Release to Maven Central:
+apply plugin: 'io.codearte.nexus-staging'
+
+
+group = 'com.carmatechnologies.servlet'
+archivesBaseName = project.name
+version = '1.0.0-SNAPSHOT'
+
+sourceCompatibility = 1.8
+
+repositories {
+  mavenCentral()
+}
+
+dependencies {
+  compile 'org.kohsuke:libpam4j:1.8' // N.B.: this library depends on net.java.dev.jna:jna:4.0.0
+  // Use the servlet API for compilation and for testing, but do NOT package it in the JAR:
+  compileOnly 'javax.servlet:javax.servlet-api:3.1.0'
+  testCompile 'javax.servlet:javax.servlet-api:3.1.0'
+  // Testing utilities:
+  testCompile 'junit:junit:4.12'
+  testCompile 'org.mockito:mockito-core:2.6.8'
+}
+
+jacocoTestReport {
+  reports {
+    xml.enabled true // required by coveralls plugin.
+    html.enabled true
+  }
+}
+
+// Always run code coverage:
+test { finalizedBy jacocoTestReport }
+
+// Add attributes manifest:
+jar {
+  manifest {
+    attributes(
+            'Implementation-Title': project.name,
+            'Implementation-Version': project.version
+    )
+  }
+}
+
+// Create a "fat" JAR with all dependencies packaged in it:
+task fatJar(type: Jar) {
+  manifest.from jar.manifest
+  classifier = 'all'
+  from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+  with jar
+}
+
+// Always generate the "fat" JAR:
+jar { finalizedBy fatJar }
+
+task javadocJar(type: Jar) {
+  classifier = 'javadoc'
+  from javadoc
+}
+
+task sourcesJar(type: Jar) {
+  classifier = 'sources'
+  from sourceSets.main.allSource
+}
+
+artifacts {
+  archives fatJar, javadocJar, sourcesJar
+}
+
+signing {
+  sign configurations.archives
+}
+
+// Release to OSSRH:
+uploadArchives {
+  repositories {
+    mavenDeployer {
+      beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+      repository(url: 'https://oss.sonatype.org/service/local/staging/deploy/maven2/') {
+        authentication(userName: ossrhUsername, password: ossrhPassword)
+      }
+      snapshotRepository(url: 'https://oss.sonatype.org/content/repositories/snapshots/') {
+        authentication(userName: ossrhUsername, password: ossrhPassword)
+      }
+      pom.project {
+        name project.name
+        description 'Servlet filter to authenticate users using Basic Authentication and PAM (Linux Pluggable Authentication Modules).'
+        url 'https://github.com/marccarre/pam-servlet-filter'
+        scm {
+          url 'scm:git@github.com:marccarre/pam-servlet-filter.git'
+          connection 'scm:git@github.com:marccarre/pam-servlet-filter.git'
+          developerConnection 'scm:git@github.com:marccarre/pam-servlet-filter.git'
+        }
+        licenses {
+          license {
+            name 'The Apache License, Version 2.0'
+            url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+          }
+        }
+        developers {
+          developer {
+            id 'marccarre'
+            name 'Marc CARRÉ'
+            email 'carre.marc@gmail.com'
+          }
+        }
+      }
+    }
+  }
+}
+
+// Release to Maven Central:
+nexusStaging {
+  packageGroup = project.group
+  stagingProfileId = ossrhUsername
+}
