@@ -44,6 +44,17 @@ It enables users to login using their Linux username and password.
 
 Apache License Version 2.0
 
+## Build:
+
+- Compile, test and generate code coverage report:
+
+        ./gradlew clean test
+
+- Compile, package, test, generate code coverage reports, and publish them:
+
+        ./gradlew clean build
+
+
 ## Release:
 
 1. Change version in `build.gradle` and commit.
@@ -58,8 +69,8 @@ Apache License Version 2.0
         ossrhUsername=<username>
         ossrhPassword=<password>
 
-5. Run: `gradle uploadArchives`
-6. Run: `gradle closeAndPromoteRepository`
+5. Run: `./gradlew uploadArchives`
+6. Run: `./gradlew closeAndPromoteRepository`
 
 
 See also: 
