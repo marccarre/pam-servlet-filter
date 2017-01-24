@@ -53,6 +53,7 @@ jacocoTestReport {
 
 // Always run code coverage:
 test { finalizedBy jacocoTestReport }
+jacocoTestReport { finalizedBy tasks.coveralls }
 
 // Add attributes manifest:
 jar {
