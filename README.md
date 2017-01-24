@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/marccarre/pam-servlet-filter.svg?branch=master)](https://travis-ci.org/marccarre/pam-servlet-filter)
+
 # PAM Authentication Servlet Filter
 
 Servlet filter to authenticate users using Basic Authentication and PAM (Linux Pluggable Authentication Modules).
