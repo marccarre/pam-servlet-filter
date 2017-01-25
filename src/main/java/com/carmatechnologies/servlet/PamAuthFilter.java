@@ -20,6 +20,7 @@ import java.util.logging.Logger;
 
 import static java.lang.Character.isWhitespace;
 import static java.lang.String.format;
+import static java.util.logging.Level.SEVERE;
 import static javax.servlet.http.HttpServletResponse.SC_UNAUTHORIZED;
 
 /**
@@ -170,7 +171,7 @@ public class PamAuthFilter implements Filter {
         try {
             return new String(Base64.getDecoder().decode(credentials), UTF_8);
         } catch (final IllegalArgumentException e) {
-            logger.severe(format("Malformed base64-encoded %s credentials [%s] from IP [%s]: %s", BASIC, credentials, httpRequest.getRemoteAddr(), e.getMessage()));
+            logger.log(SEVERE, format("Malformed base64-encoded %s credentials [%s] from IP [%s]: %s", BASIC, credentials, httpRequest.getRemoteAddr(), e.getMessage()), e);
             return EMPTY;
         }
     }
@@ -209,7 +210,7 @@ public class PamAuthFilter implements Filter {
             logger.info(format("Successfully authenticated [%s] with IP [%s], UID [%s], GID [%s] and groups [%s].", user.getUserName(), httpRequest.getRemoteAddr(), user.getUID(), user.getGID(), user.getGroups()));
             return true;
         } catch (final PAMException e) {
-            logger.severe(format("Failed to authenticate [%s] with IP [%s]: %s", credentials[INDEX_USERNAME], httpRequest.getRemoteAddr(), e.getMessage()));
+            logger.log(SEVERE, format("Failed to authenticate [%s] with IP [%s]: %s", credentials[INDEX_USERNAME], httpRequest.getRemoteAddr(), e.getMessage()), e);
             return false;
         }
     }
