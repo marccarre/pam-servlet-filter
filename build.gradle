@@ -35,7 +35,10 @@ repositories {
 }
 
 dependencies {
-  compile 'org.kohsuke:libpam4j:1.8' // N.B.: this library depends on net.java.dev.jna:jna:4.0.0
+  compile('org.kohsuke:libpam4j:1.8') {
+    exclude group: 'net.java.dev.jna', module: 'jna'
+  }
+  compile 'net.java.dev.jna:jna:4.3.0'
   // Use the servlet API for compilation and for testing, but do NOT package it in the JAR:
   compileOnly 'javax.servlet:javax.servlet-api:3.1.0'
   testCompile 'javax.servlet:javax.servlet-api:3.1.0'
