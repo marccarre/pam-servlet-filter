@@ -15,6 +15,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.Base64;
+import java.util.function.Function;
 import java.util.logging.Logger;
 
 import static java.lang.Character.isWhitespace;
@@ -28,8 +29,21 @@ import static javax.servlet.http.HttpServletResponse.SC_UNAUTHORIZED;
  * @author Marc CARRE (@marccarre / carre.marc@gmail.com)
  */
 public class PamAuthFilter implements Filter {
-    private static final String LOGIN = "login"; // PAM service we use to authenticate. See: http://tldp.org/HOWTO/User-Authentication-HOWTO/x115.html
-    private static final String REALM = "realm";
+    /**
+     * Basic Authentication Scheme's realm.
+     * See also: https://tools.ietf.org/html/rfc2617#section-2
+     */
+    public static final String REALM = "realm";
+
+    /**
+     * PAM service used to authenticate.
+     * See:
+     * - http://tldp.org/HOWTO/User-Authentication-HOWTO/x115.html
+     * - http://www.linux-pam.org/Linux-PAM-html/sag-overview.html
+     * - http://www.linux-pam.org/Linux-PAM-html/sag-configuration.html
+     */
+    public static final String SERVICE = "service";
+
     private static final String WHITESPACE = " ";
     private static final String COLON = ":";
     private static final int AT_MOST_ONCE = 2;
@@ -50,35 +64,44 @@ public class PamAuthFilter implements Filter {
 
     private static final Logger logger = Logger.getLogger(PamAuthFilter.class.getSimpleName());
 
-    private final PAM pam;
+    private final Function<String, PAM> pamFactory;
     private String realm;
+    private String service;
+    private PAM pam;
 
     public PamAuthFilter() {
-        this(newPam());
+        this(PamAuthFilter::newPam);
     }
 
-    PamAuthFilter(final PAM pam) {
-        if (pam == null) {
-            throw new NullPointerException("Please provide a non-null value for PAM authenticator.");
-        }
-        this.pam = pam;
-    }
-
-    private static PAM newPam() {
+    private static PAM newPam(final String service) {
         try {
-            return new PAM(LOGIN);
+            return new PAM(service);
         } catch (final PAMException e) {
             throw new RuntimeException(e);
         }
     }
 
-    String realm() {
+    PamAuthFilter(final Function<String, PAM> pamFactory) {
+        if (pamFactory == null) {
+            throw new NullPointerException("Please provide a non-null PAM factory.");
+        }
+        this.pamFactory = pamFactory;
+    }
+
+    public String realm() {
         return realm;
+    }
+
+    public String service() {
+        return service;
     }
 
     @Override
     public void init(final FilterConfig config) throws ServletException {
         realm = checkNotBlank(config.getInitParameter(REALM), REALM);
+        service = checkNotBlank(config.getInitParameter(SERVICE), SERVICE);
+        logger.info(format("PAM authentication filter configured with %s=[%s] and %s=[%s].", REALM, realm, SERVICE, service));
+        pam = pamFactory.apply(service);
     }
 
     private String checkNotBlank(final String value, final String name) throws ServletException {

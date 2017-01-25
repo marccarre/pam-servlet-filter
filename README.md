@@ -16,6 +16,12 @@ It enables users to login using their Linux username and password.
 ## Usage:
 
 - add the JAR to your classpath, and
+- optionally, create `/etc/pam.d/{application}` and configure it to be able to authenticate using PAM:
+
+        # PAM configuration for {application}
+        # Standard Un*x authentication.
+        @include common-auth
+
 - optionally, and depending your web application, add the filter to your `web.xml`:
 
         <?xml version="1.0" encoding="UTF-8"?>
@@ -31,6 +37,10 @@ It enables users to login using their Linux username and password.
             <init-param>
               <param-name>realm</param-name>
               <param-value>NameOfYourApplication</param-value>
+            </init-param>
+            <init-param>
+              <param-name>service</param-name>
+              <param-value>{application}</param-value>
             </init-param>
           </filter>
           
@@ -78,3 +88,9 @@ Apache License Version 2.0
 See also: 
 - [Sonatype's Gradle documentation](http://central.sonatype.org/pages/gradle.html)
 - [Gradle Nexus Staging plugin's documentation](https://github.com/Codearte/gradle-nexus-staging-plugin/)
+
+## Resources:
+
+- http://tldp.org/HOWTO/User-Authentication-HOWTO/x115.html
+- http://www.linux-pam.org/Linux-PAM-html/sag-overview.html
+- http://www.linux-pam.org/Linux-PAM-html/sag-configuration.html

@@ -41,7 +41,7 @@ public class PamAuthFilterTest {
     private final FilterChain filterChain = mock(FilterChain.class);
     private final FilterConfig filterConfig = mock(FilterConfig.class);
     private final PAM pam = mock(PAM.class);
-    private final PamAuthFilter filter = new PamAuthFilter(pam);
+    private final PamAuthFilter filter = new PamAuthFilter((String) -> pam);
 
     @Rule
     public final ExpectedException exception = ExpectedException.none();
@@ -50,6 +50,7 @@ public class PamAuthFilterTest {
     public void setUp() throws ServletException {
         when(request.getRemoteAddr()).thenReturn("127.0.0.1");
         when(filterConfig.getInitParameter("realm")).thenReturn("Tatooine");
+        when(filterConfig.getInitParameter("service")).thenReturn("pam-servlet-filter");
         filter.init(filterConfig);
     }
 
@@ -156,15 +157,20 @@ public class PamAuthFilterTest {
     }
 
     @Test
-    public void creatingFilterWithNullPamThrowsNullPointerException() {
+    public void creatingFilterWithNullPamFactoryThrowsNullPointerException() {
         exception.expect(NullPointerException.class);
-        exception.expectMessage(equalTo("Please provide a non-null value for PAM authenticator."));
+        exception.expectMessage(equalTo("Please provide a non-null PAM factory."));
         new PamAuthFilter(null);
     }
 
     @Test
     public void initFilterShouldSetRealmToTheProvidedValue() throws ServletException {
         assertThat(filter.realm(), is("Tatooine"));
+    }
+
+    @Test
+    public void initFilterShouldSetPamServiceToTheProvidedValue() throws ServletException {
+        assertThat(filter.service(), is("pam-servlet-filter"));
     }
 
     @Test
@@ -192,6 +198,36 @@ public class PamAuthFilterTest {
     }
 
     @Test
+    public void initFilterWithNullServiceThrowsServletException() throws ServletException {
+        PamAuthFilter filter = new PamAuthFilter((String) -> pam);
+        when(filterConfig.getInitParameter("realm")).thenReturn("Tatooine");
+        when(filterConfig.getInitParameter("service")).thenReturn(null);
+        exception.expect(ServletException.class);
+        exception.expectMessage(equalTo("Please provide a non-null 'service': [null]."));
+        filter.init(filterConfig);
+    }
+
+    @Test
+    public void initFilterWithEmptyServiceThrowsServletException() throws ServletException {
+        PamAuthFilter filter = new PamAuthFilter((String) -> pam);
+        when(filterConfig.getInitParameter("realm")).thenReturn("Tatooine");
+        when(filterConfig.getInitParameter("service")).thenReturn("");
+        exception.expect(ServletException.class);
+        exception.expectMessage(equalTo("Please provide a non-blank 'service': []."));
+        filter.init(filterConfig);
+    }
+
+    @Test
+    public void initFilterWithBlankServiceThrowsServletException() throws ServletException {
+        PamAuthFilter filter = new PamAuthFilter((String) -> pam);
+        when(filterConfig.getInitParameter("realm")).thenReturn("Tatooine");
+        when(filterConfig.getInitParameter("service")).thenReturn("    ");
+        exception.expect(ServletException.class);
+        exception.expectMessage(equalTo("Please provide a non-blank 'service': [    ]."));
+        filter.init(filterConfig);
+    }
+
+    @Test
     public void authorisedUserShouldProceedToTheNextFilter_FunctionalTest() throws IOException, ServletException {
         final String username = System.getenv("PAM_USERNAME");
         final String password = System.getenv("PAM_PASSWORD");
@@ -201,6 +237,12 @@ public class PamAuthFilterTest {
 
         final String credentials = Base64.getEncoder().encodeToString(format("%s:%s", username, password).getBytes(UTF_8));
         final PamAuthFilter filter = new PamAuthFilter();
+
+        final FilterConfig filterConfig = mock(FilterConfig.class);
+        when(filterConfig.getInitParameter("realm")).thenReturn("Tatooine");
+        when(filterConfig.getInitParameter("service")).thenReturn("sshd");
+        filter.init(filterConfig);
+
         when(request.getHeader(AUTHORIZATION)).thenReturn("Basic " + credentials);
         filter.doFilter(request, response, filterChain);
         verify(filterChain).doFilter(request, response);
