@@ -14,7 +14,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.nio.charset.Charset;
-import java.util.Arrays;
 import java.util.Base64;
 import java.util.logging.Logger;
 
@@ -44,6 +43,10 @@ public class PamAuthFilter implements Filter {
     private static final Charset UTF_8 = Charset.forName("UTF-8"); // UTF-8: eight-bit UCS Transformation Format.
     private static final String EMPTY = "";
     private static final String WWW_AUTHENTICATE = "WWW-Authenticate";
+    private static final char STAR = '*';
+    private static final char LEFT_SQUARE_BRACKET = '[';
+    private static final char RIGHT_SQUARE_BRACKET = ']';
+    private static final char COMMA = ',';
 
     private static final Logger logger = Logger.getLogger(PamAuthFilter.class.getSimpleName());
 
@@ -123,12 +126,12 @@ public class PamAuthFilter implements Filter {
         }
         final String[] basic = auth.split(WHITESPACE, AT_MOST_ONCE);
         if ((basic.length != TWO) || !BASIC.equals(basic[INDEX_BASIC])) {
-            logger.severe(format("Malformed %s header [%s] from IP [%s].", AUTHORIZATION, auth, httpRequest.getRemoteAddr()));
+            logger.severe(format("Malformed %s header [%s] from IP [%s].", AUTHORIZATION, safelyRender(basic), httpRequest.getRemoteAddr()));
             return false;
         }
         final String[] credentials = base64Decode(basic[INDEX_CREDENTIALS], httpRequest).split(COLON, AT_MOST_ONCE);
         if ((credentials.length != TWO) || isBlank(credentials[INDEX_USERNAME]) || isBlank(credentials[INDEX_PASSWORD])) {
-            logger.severe(format("Malformed %s credentials. Encoded: [%s]. Decoded: [%s]. IP: [%s].", BASIC, basic[INDEX_CREDENTIALS], Arrays.toString(credentials), httpRequest.getRemoteAddr()));
+            logger.severe(format("Malformed %s credentials. Encoded: [%s]. Decoded: [%s]. IP: [%s].", BASIC, basic[INDEX_CREDENTIALS], safelyRender(credentials), httpRequest.getRemoteAddr()));
             return false;
         }
         return isAuthenticated(credentials, httpRequest);
@@ -141,6 +144,34 @@ public class PamAuthFilter implements Filter {
             logger.severe(format("Malformed base64-encoded %s credentials [%s] from IP [%s]: %s", BASIC, credentials, httpRequest.getRemoteAddr(), e.getMessage()));
             return EMPTY;
         }
+    }
+
+    private String safelyRender(final String[] array) {
+        final StringBuilder builder = new StringBuilder();
+        final int last = array.length - 1;
+        builder.append(LEFT_SQUARE_BRACKET);
+        for (int i = 0; i < array.length; ++i) {
+            appendOrMask(builder, array, i);
+            if (i < last) {
+                builder.append(COMMA);
+            }
+        }
+        builder.append(RIGHT_SQUARE_BRACKET);
+        return builder.toString();
+    }
+
+    private void appendOrMask(final StringBuilder builder, final String[] array, final int i) {
+        builder.append(LEFT_SQUARE_BRACKET);
+        if ((i == INDEX_USERNAME) || (i == INDEX_BASIC)) {
+            // 'Basic' header and username fields should typically be safe to print:
+            builder.append(array[i]);
+        } else {
+            // Mask details to avoid accidentally leaking information in the logs (e.g. parts of a password):
+            for (int j = 0; j < array[i].length(); ++j) {
+                builder.append(STAR);
+            }
+        }
+        builder.append(RIGHT_SQUARE_BRACKET);
     }
 
     private boolean isAuthenticated(final String[] credentials, final HttpServletRequest httpRequest) {
