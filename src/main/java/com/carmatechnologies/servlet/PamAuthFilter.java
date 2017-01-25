@@ -69,7 +69,6 @@ public class PamAuthFilter implements Filter {
     private boolean initialised = false;
     private String realm;
     private String service;
-    private PAM pam;
 
     public PamAuthFilter() {
         this(PamAuthFilter::newPam);
@@ -79,7 +78,7 @@ public class PamAuthFilter implements Filter {
         try {
             return new PAM(service);
         } catch (final PAMException e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException("Failed to create PAM", e);
         }
     }
 
@@ -105,7 +104,6 @@ public class PamAuthFilter implements Filter {
         } else {
             realm = checkNotBlank(config.getInitParameter(REALM), REALM);
             service = checkNotBlank(config.getInitParameter(SERVICE), SERVICE);
-            pam = pamFactory.apply(service);
             initialised = true;
             logger.info(format("PAM authentication filter configured with %s=[%s] and %s=[%s].", REALM, realm, SERVICE, service));
         }
@@ -205,20 +203,23 @@ public class PamAuthFilter implements Filter {
     }
 
     private boolean isAuthenticated(final String[] credentials, final HttpServletRequest httpRequest) {
+        PAM pam = null;
         try {
+            pam = pamFactory.apply(service);
             final UnixUser user = pam.authenticate(credentials[INDEX_USERNAME], credentials[INDEX_PASSWORD]);
             logger.info(format("Successfully authenticated [%s] with IP [%s], UID [%s], GID [%s] and groups [%s].", user.getUserName(), httpRequest.getRemoteAddr(), user.getUID(), user.getGID(), user.getGroups()));
             return true;
         } catch (final PAMException e) {
             logger.log(SEVERE, format("Failed to authenticate [%s] with IP [%s]: %s", credentials[INDEX_USERNAME], httpRequest.getRemoteAddr(), e.getMessage()), e);
             return false;
+        } finally {
+            if (pam != null) {
+                pam.dispose();
+            }
         }
     }
 
     @Override
     public void destroy() {
-        if (pam != null) {
-            pam.dispose();
-        }
     }
 }
