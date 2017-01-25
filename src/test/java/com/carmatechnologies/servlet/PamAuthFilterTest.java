@@ -175,7 +175,9 @@ public class PamAuthFilterTest {
 
     @Test
     public void initFilterWithNullRealmThrowsServletException() throws ServletException {
+        PamAuthFilter filter = new PamAuthFilter((String) -> pam);
         when(filterConfig.getInitParameter("realm")).thenReturn(null);
+        when(filterConfig.getInitParameter("service")).thenReturn("pam-servlet-filter");
         exception.expect(ServletException.class);
         exception.expectMessage(equalTo("Please provide a non-null 'realm': [null]."));
         filter.init(filterConfig);
@@ -183,7 +185,9 @@ public class PamAuthFilterTest {
 
     @Test
     public void initFilterWithEmptyRealmThrowsServletException() throws ServletException {
+        PamAuthFilter filter = new PamAuthFilter((String) -> pam);
         when(filterConfig.getInitParameter("realm")).thenReturn("");
+        when(filterConfig.getInitParameter("service")).thenReturn("pam-servlet-filter");
         exception.expect(ServletException.class);
         exception.expectMessage(equalTo("Please provide a non-blank 'realm': []."));
         filter.init(filterConfig);
@@ -191,7 +195,9 @@ public class PamAuthFilterTest {
 
     @Test
     public void initFilterWithBlankRealmThrowsServletException() throws ServletException {
+        PamAuthFilter filter = new PamAuthFilter((String) -> pam);
         when(filterConfig.getInitParameter("realm")).thenReturn("    ");
+        when(filterConfig.getInitParameter("service")).thenReturn("pam-servlet-filter");
         exception.expect(ServletException.class);
         exception.expectMessage(equalTo("Please provide a non-blank 'realm': [    ]."));
         filter.init(filterConfig);

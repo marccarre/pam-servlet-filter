@@ -65,6 +65,7 @@ public class PamAuthFilter implements Filter {
     private static final Logger logger = Logger.getLogger(PamAuthFilter.class.getSimpleName());
 
     private final Function<String, PAM> pamFactory;
+    private boolean initialised = false;
     private String realm;
     private String service;
     private PAM pam;
@@ -97,11 +98,16 @@ public class PamAuthFilter implements Filter {
     }
 
     @Override
-    public void init(final FilterConfig config) throws ServletException {
-        realm = checkNotBlank(config.getInitParameter(REALM), REALM);
-        service = checkNotBlank(config.getInitParameter(SERVICE), SERVICE);
-        logger.info(format("PAM authentication filter configured with %s=[%s] and %s=[%s].", REALM, realm, SERVICE, service));
-        pam = pamFactory.apply(service);
+    public synchronized void init(final FilterConfig config) throws ServletException {
+        if (initialised) {
+            logger.info(format("PAM authentication filter already initialised with %s=[%s] and %s=[%s].", REALM, realm, SERVICE, service));
+        } else {
+            realm = checkNotBlank(config.getInitParameter(REALM), REALM);
+            service = checkNotBlank(config.getInitParameter(SERVICE), SERVICE);
+            pam = pamFactory.apply(service);
+            initialised = true;
+            logger.info(format("PAM authentication filter configured with %s=[%s] and %s=[%s].", REALM, realm, SERVICE, service));
+        }
     }
 
     private String checkNotBlank(final String value, final String name) throws ServletException {
@@ -210,6 +216,8 @@ public class PamAuthFilter implements Filter {
 
     @Override
     public void destroy() {
-        pam.dispose();
+        if (pam != null) {
+            pam.dispose();
+        }
     }
 }
