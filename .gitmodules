@@ -1,0 +1,3 @@
+[submodule ".libpam4j"]
+	path = .libpam4j
+	url = https://github.com/marccarre/libpam4j.git

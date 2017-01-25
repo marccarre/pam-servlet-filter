@@ -48,6 +48,15 @@ dependencies {
 }
 
 jacocoTestReport {
+  // Exclude src/main/java/org:
+  afterEvaluate {
+    classDirectories = files(
+            classDirectories.files.collect {
+              fileTree(dir: it, exclude: ['org'])
+            }
+    )
+  }
+
   reports {
     xml.enabled true // required by coveralls plugin.
     html.enabled true

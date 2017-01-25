@@ -90,6 +90,21 @@ It enables users to login using their Linux, SSH, SSO, etc. credentials, or even
 
 [Apache License Version 2.0](https://www.apache.org/licenses/LICENSE-2.0) -- see also [LICENSE](https://raw.githubusercontent.com/marccarre/pam-servlet-filter/master/LICENSE)
 
+## Develop:
+
+Contributions are welcome!
+
+1. Fork the repository
+2. Clone the repository:
+
+        # Replace marccarre with your GitHub username:
+        git clone git@github.com:marccarre/pam-servlet-filter.git  
+
+3. Pull submodules' sources:
+
+        git submodule update --init  # Pull submodules' sources
+
+
 ## Build:
 
 - Compile, test and generate code coverage report:
