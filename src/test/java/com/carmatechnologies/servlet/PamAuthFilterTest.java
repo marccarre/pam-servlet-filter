@@ -67,9 +67,26 @@ public class PamAuthFilterTest {
     }
 
     @Test
+    public void authorisedUserShouldProceedToTheNextFilter_withEmptyPassword() throws IOException, ServletException, PAMException {
+        when(pam.authenticate("user_with_empty_password", "")).thenReturn(mock(UnixUser.class));
+        when(request.getHeader(AUTHORIZATION)).thenReturn("Basic dXNlcl93aXRoX2VtcHR5X3Bhc3N3b3JkOg=="); // user_with_empty_password:
+        filter.doFilter(request, response, filterChain);
+        verify(filterChain).doFilter(request, response);
+    }
+
+    @Test
     public void unauthorisedUserShouldReturnError401() throws IOException, ServletException, PAMException {
         when(pam.authenticate("darth_vader", "secret456")).thenThrow(new PAMException("Sith Lords are not allowed here, go away!"));
         when(request.getHeader(AUTHORIZATION)).thenReturn("Basic ZGFydGhfdmFkZXI6c2VjcmV0NDU2"); // darth_vader:secret456
+        filter.doFilter(request, response, filterChain);
+        verify(response).setHeader(WWW_AUTHENTICATE, BASIC_REALM_TATOOINE);
+        verify(response).sendError(HTTP_STATUS_CODE_401_AUTHORIZED);
+    }
+
+    @Test
+    public void unauthorisedUserShouldReturnError401_withEmptyPassword() throws IOException, ServletException, PAMException {
+        when(pam.authenticate("user_with_empty_password", "")).thenThrow(new PAMException("Who the hell are you?! Go away!"));
+        when(request.getHeader(AUTHORIZATION)).thenReturn("Basic dXNlcl93aXRoX2VtcHR5X3Bhc3N3b3JkOg=="); // user_with_empty_password:
         filter.doFilter(request, response, filterChain);
         verify(response).setHeader(WWW_AUTHENTICATE, BASIC_REALM_TATOOINE);
         verify(response).sendError(HTTP_STATUS_CODE_401_AUTHORIZED);
@@ -125,14 +142,6 @@ public class PamAuthFilterTest {
     @Test
     public void malformedAuthorizationHeaderShouldReturnError401_BasicCredentialsAreNotColonSeparated() throws IOException, ServletException {
         when(request.getHeader(AUTHORIZATION)).thenReturn("Basic bm9Db2xvbkJldHdlZW5Vc2VybmFtZUFuZFBhc3N3b3Jk"); // noColonBetweenUsernameAndPassword
-        filter.doFilter(request, response, filterChain);
-        verify(response).setHeader(WWW_AUTHENTICATE, BASIC_REALM_TATOOINE);
-        verify(response).sendError(HTTP_STATUS_CODE_401_AUTHORIZED);
-    }
-
-    @Test
-    public void malformedAuthorizationHeaderShouldReturnError401_BasicCredentialsWithEmptyPassword() throws IOException, ServletException {
-        when(request.getHeader(AUTHORIZATION)).thenReturn("Basic dXNlcl93aXRoX2VtcHR5X3Bhc3N3b3JkOg=="); // user_with_empty_password:
         filter.doFilter(request, response, filterChain);
         verify(response).setHeader(WWW_AUTHENTICATE, BASIC_REALM_TATOOINE);
         verify(response).sendError(HTTP_STATUS_CODE_401_AUTHORIZED);

@@ -130,7 +130,7 @@ public class PamAuthFilter implements Filter {
             return false;
         }
         final String[] credentials = base64Decode(basic[INDEX_CREDENTIALS], httpRequest).split(COLON, AT_MOST_ONCE);
-        if ((credentials.length != TWO) || isBlank(credentials[INDEX_USERNAME]) || isBlank(credentials[INDEX_PASSWORD])) {
+        if ((credentials.length != TWO) || isBlank(credentials[INDEX_USERNAME])) {
             logger.severe(format("Malformed %s credentials. Encoded: [%s]. Decoded: [%s]. IP: [%s].", BASIC, basic[INDEX_CREDENTIALS], safelyRender(credentials), httpRequest.getRemoteAddr()));
             return false;
         }
