@@ -17,8 +17,24 @@ It enables users to login using their Linux, SSH, SSO, etc. credentials, or even
 
 - add the appropriate JAR to your classpath, i.e. either:
 
-  - the "thin" JAR, i.e. [`pam-servlet-filter-{version}.jar`](https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22com.carmatechnologies.servlet%22%20a%3A%22pam-servlet-filter%22), if you already have [`org.kohsuke:libpam4j`](https://github.com/kohsuke/libpam4j) and [`net.java.dev.jna:jna`](https://github.com/java-native-access/jna) on your classpath, or
-  - the "fat" JAR, i.e. [`pam-servlet-filter-{version}-all.jar`](https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22com.carmatechnologies.servlet%22%20a%3A%22pam-servlet-filter%22), if you do not have these already.
+    - the "thin" JAR, i.e. [`pam-servlet-filter-{version}.jar`](https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22com.carmatechnologies.servlet%22%20a%3A%22pam-servlet-filter%22), if you already have [`org.kohsuke:libpam4j`](https://github.com/kohsuke/libpam4j) and [`net.java.dev.jna:jna`](https://github.com/java-native-access/jna) on your classpath, or
+    - the "fat" JAR, i.e. [`pam-servlet-filter-{version}-all.jar`](https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22com.carmatechnologies.servlet%22%20a%3A%22pam-servlet-filter%22), if you do not have these already.
+
+  Note that these are available in Maven Central, so you should be able to add the PAM authentication filter directly to your Maven or Gradle project:
+
+    - Gradle:
+
+          compile 'com.carmatechnologies.servlet:pam-servlet-filter:{version}[:all]'
+
+    - Maven:
+
+          <dependency>
+              <groupId>com.carmatechnologies.servlet</groupId>
+              <artifactId>pam-servlet-filter</artifactId>
+              <version>{version}</version>
+              <scope>compile</scope>
+              [<classifier>all</classifier>]
+          </dependency>
 
 - optionally, create `/etc/pam.d/{application}` and configure it to be able to authenticate using PAM, e.g.:
 
