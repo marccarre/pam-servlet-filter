@@ -107,13 +107,13 @@ uploadArchives {
         beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
       }
       repository(url: 'https://oss.sonatype.org/service/local/staging/deploy/maven2/') {
-        if (project.hasProperty('ossrhUsername')) {
-          authentication(userName: ossrhUsername, password: ossrhPassword)
+        if (project.hasProperty('nexusUsername')) {
+          authentication(userName: nexusUsername, password: nexusPassword)
         }
       }
       snapshotRepository(url: 'https://oss.sonatype.org/content/repositories/snapshots/') {
-        if (project.hasProperty('ossrhUsername')) {
-          authentication(userName: ossrhUsername, password: ossrhPassword)
+        if (project.hasProperty('nexusUsername')) {
+          authentication(userName: nexusUsername, password: nexusPassword)
         }
       }
       pom.project {
@@ -145,8 +145,8 @@ uploadArchives {
 
 // Release to Maven Central:
 nexusStaging {
-  if (project.hasProperty('ossrhUsername')) {
-    packageGroup = project.group
-    stagingProfileId = ossrhUsername
+  if (project.hasProperty('nexusUsername')) {
+    packageGroup = 'com.carmatechnologies'
+    stagingProfileId = '1df1bd9f837a66'
   }
 }

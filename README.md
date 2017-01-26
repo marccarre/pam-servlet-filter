@@ -96,11 +96,17 @@ It enables users to login using their Linux, SSH, SSO, etc. credentials, or even
         signing.password=<password>
         signing.secretKeyRingFile=/home/<username>/.gnupg/secring.gpg
 
-        ossrhUsername=<username>
-        ossrhPassword=<password>
+        nexusUsername=<username>
+        nexusPassword=<password>
 
 5. Run: `./gradlew uploadArchives`
 6. Run: `./gradlew closeAndPromoteRepository`
+   Alternatively, run: 
+
+        ./gradlew closeRepository
+        ./gradlew promoteRepository
+
+   Alternatively, go to the [staging repository](https://oss.sonatype.org/#stagingRepositories), and then "close" and "release" the binaries. See also this [documentation](http://central.sonatype.org/pages/releasing-the-deployment.html).
 
 See also: 
 
