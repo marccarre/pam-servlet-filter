@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/marccarre/pam-servlet-filter.svg?branch=master)](https://travis-ci.org/marccarre/pam-servlet-filter) [![Coverage Status](https://coveralls.io/repos/github/marccarre/pam-servlet-filter/badge.svg)](https://coveralls.io/github/marccarre/pam-servlet-filter)
+[![Build Status](https://travis-ci.org/marccarre/pam-servlet-filter.svg?branch=master)](https://travis-ci.org/marccarre/pam-servlet-filter) [![Coverage Status](https://coveralls.io/repos/github/marccarre/pam-servlet-filter/badge.svg)](https://coveralls.io/github/marccarre/pam-servlet-filter) [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.carmatechnologies.servlet/pam-servlet-filter/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.carmatechnologies.servlet/pam-servlet-filter)
 
 # PAM Authentication Servlet Filter
 
