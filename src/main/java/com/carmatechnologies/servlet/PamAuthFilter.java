@@ -45,6 +45,9 @@ public class PamAuthFilter implements Filter {
      */
     public static final String SERVICE = "service";
 
+    public static final String DEFAULT_REALM = "unknown";
+    public static final String DEFAULT_SERVICE = "login";
+
     private static final String WHITESPACE = " ";
     private static final String COLON = ":";
     private static final int AT_MOST_ONCE = 2;
@@ -102,21 +105,15 @@ public class PamAuthFilter implements Filter {
         if (initialised) {
             logger.info(format("PAM authentication filter already initialised with %s=[%s] and %s=[%s].", REALM, realm, SERVICE, service));
         } else {
-            realm = checkNotBlank(config.getInitParameter(REALM), REALM);
-            service = checkNotBlank(config.getInitParameter(SERVICE), SERVICE);
+            realm = getOrDefault(config.getInitParameter(REALM), DEFAULT_REALM);
+            service = getOrDefault(config.getInitParameter(SERVICE), DEFAULT_SERVICE);
             initialised = true;
             logger.info(format("PAM authentication filter configured with %s=[%s] and %s=[%s].", REALM, realm, SERVICE, service));
         }
     }
 
-    private String checkNotBlank(final String value, final String name) throws ServletException {
-        if (value == null) {
-            throw new ServletException(format("Please provide a non-null '%s': [%s].", name, value));
-        }
-        if (isBlank(value)) {
-            throw new ServletException(format("Please provide a non-blank '%s': [%s].", name, value));
-        }
-        return value;
+    private String getOrDefault(final String value, final String defaultValue) throws ServletException {
+        return ((value == null) || isBlank(value)) ? defaultValue : value;
     }
 
     private static boolean isBlank(final CharSequence characters) {
